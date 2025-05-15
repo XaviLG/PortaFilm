@@ -28,10 +28,24 @@ include '../includes/nav.php';
 
 <div class="page-content">
   <div class="detail-container">
-    <div class="detail-poster">
-      <img src="/portaFilm/assets/img/<?php echo htmlspecialchars($pelicula['portada']); ?>"
-           alt="<?php echo htmlspecialchars($pelicula['titulo']); ?>">
+
+    <!--  LEFT COLUMN: poster arriba y estrellas debajo -->
+    <div class="detail-left">
+      <div class="detail-poster">
+        <img 
+          src="/portaFilm/assets/img/<?php echo htmlspecialchars($pelicula['portada']); ?>" 
+          alt="<?php echo htmlspecialchars($pelicula['titulo']); ?>"
+        >
+      </div>
+
+      <div class="star-rating" data-pelicula="<?php echo $id; ?>">
+        <?php for ($i = 1; $i <= 10; $i++): ?>
+          <span class="star" data-score="<?php echo $i; ?>">★</span>
+        <?php endfor; ?>
+      </div>
     </div>
+
+    <!--  RIGHT COLUMN: toda la información -->
     <div class="detail-info">
       <h1><?php echo htmlspecialchars($pelicula['titulo']); ?></h1>
       <div class="info-item"><strong>Año:</strong> <?php echo htmlspecialchars($pelicula['anho']); ?></div>
@@ -43,7 +57,15 @@ include '../includes/nav.php';
         <p><?php echo nl2br(htmlspecialchars($pelicula['sipnopsis'])); ?></p>
       </div>
     </div>
+
   </div>
 </div>
+
+<!-- Indicador de sesión para rating.js -->
+<script>
+  window.isLogged = <?php echo isset($_SESSION['usuario_id']) ? 'true' : 'false'; ?>;
+</script>
+<!-- Lógica de hover/click en las estrellas -->
+<script src="/portaFilm/assets/js/rating.js"></script>
 
 <?php include '../includes/footer.php'; ?>

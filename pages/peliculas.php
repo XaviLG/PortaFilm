@@ -22,6 +22,28 @@ if (!$pelicula) {
     exit();
 }
 
+// 3) Obtener valoración media
+$avgStmt = $conn->prepare("
+  SELECT ROUND(AVG(puntuacion),1) 
+    AS avg_rating 
+  FROM valoracion 
+  WHERE pelicula_id = ?
+");
+$avgStmt->execute([$id]);
+$avg = $avgStmt->fetchColumn();
+
+// 4) Obtener tu puntuación si estás logueado
+$userScore = 0;
+if (isset($_SESSION['usuario_id'])) {
+    $usrStmt = $conn->prepare("
+      SELECT puntuacion 
+      FROM valoracion 
+      WHERE user_id = ? AND pelicula_id = ?
+    ");
+    $usrStmt->execute([$_SESSION['usuario_id'], $id]);
+    $userScore = (int)$usrStmt->fetchColumn();
+}
+
 include '../includes/header.php';
 include '../includes/nav.php';
 ?>
@@ -43,6 +65,13 @@ include '../includes/nav.php';
           <span class="star" data-score="<?php echo $i; ?>">★</span>
         <?php endfor; ?>
       </div>
+      <div class="avg-rating">
+      <?php 
+        echo $avg 
+          ? "Valoración media: $avg / 10" 
+          : "Sin valoraciones aún"; 
+      ?>
+    </div>
     </div>
 
     <!--  RIGHT COLUMN: toda la información -->
@@ -64,6 +93,7 @@ include '../includes/nav.php';
 <!-- Indicador de sesión para rating.js -->
 <script>
   window.isLogged = <?php echo isset($_SESSION['usuario_id']) ? 'true' : 'false'; ?>;
+  window.userScore  = <?php echo json_encode($userScore); ?>;
 </script>
 <!-- Lógica de hover/click en las estrellas -->
 <script src="/portaFilm/assets/js/rating.js"></script>

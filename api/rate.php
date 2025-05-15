@@ -3,44 +3,61 @@ session_start();
 header('Content-Type: application/json');
 include '../config/db.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if ($_SERVER['REQUEST_METHOD']!=='POST') {
     http_response_code(405);
-    echo json_encode(['error' => 'Método no permitido']);
-    exit();
+    exit(json_encode(['error'=>'Método no permitido']));
 }
 if (!isset($_SESSION['usuario_id'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'No autorizado']);
-    exit();
+    exit(json_encode(['error'=>'No autorizado']));
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-$pelicula_id = intval($input['pelicula_id'] ?? 0);
-$score       = intval($input['score']       ?? 0);
-$user_id     = $_SESSION['usuario_id'];
+$input      = json_decode(file_get_contents('php://input'), true);
+$pid        = intval($input['pelicula_id'] ?? 0);
+$score      = intval($input['score']       ?? 0);
+$user_id    = $_SESSION['usuario_id'];
 
-if ($pelicula_id < 1 || $score < 1 || $score > 10) {
+if ($pid < 1 || $score < 1 || $score > 10) {
     http_response_code(400);
-    echo json_encode(['error' => 'Datos inválidos']);
-    exit();
+    exit(json_encode(['error'=>'Datos inválidos']));
 }
 
 try {
-    // ¿Ya tenía valoración?
-    $stmt = $conn->prepare("SELECT id FROM valoracion WHERE user_id = ? AND pelicula_id = ?");
-    $stmt->execute([$user_id, $pelicula_id]);
-    if ($stmt->fetch()) {
-        $upd = $conn->prepare("UPDATE valoracion 
-                               SET puntuacion = ? 
-                               WHERE user_id = ? AND pelicula_id = ?");
-        $upd->execute([$score, $user_id, $pelicula_id]);
+    // insert o update
+    $exists = $conn->prepare("
+      SELECT 1 FROM valoracion 
+      WHERE user_id=? AND pelicula_id=?
+    ");
+    $exists->execute([$user_id, $pid]);
+    if ($exists->fetch()) {
+        $upd = $conn->prepare("
+          UPDATE valoracion 
+          SET puntuacion=? 
+          WHERE user_id=? AND pelicula_id=?
+        ");
+        $upd->execute([$score, $user_id, $pid]);
     } else {
-        $ins = $conn->prepare("INSERT INTO valoracion (user_id, pelicula_id, puntuacion)
-                               VALUES (?, ?, ?)");
-        $ins->execute([$user_id, $pelicula_id, $score]);
+        $ins = $conn->prepare("
+          INSERT INTO valoracion (user_id,pelicula_id,puntuacion)
+          VALUES (?,?,?)
+        ");
+        $ins->execute([$user_id, $pid, $score]);
     }
-    echo json_encode(['success' => true]);
+
+    // calcular nueva media
+    $avgStmt = $conn->prepare("
+      SELECT ROUND(AVG(puntuacion),1) 
+      FROM valoracion 
+      WHERE pelicula_id=?
+    ");
+    $avgStmt->execute([$pid]);
+    $new_avg = $avgStmt->fetchColumn();
+
+    echo json_encode([
+      'success'      => true,
+      'new_average'  => $new_avg
+    ]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['error'=>$e->getMessage()]);
 }

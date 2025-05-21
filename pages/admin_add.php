@@ -1,17 +1,24 @@
 <?php
 session_start();
 
-// Comprobamos si está logueado
+// 1) Conexión a la base de datos
+include '../config/db.php';   // <-- Asegúrate de que esta ruta es correcta
+
+// 2) Comprobamos si está logueado
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// Comprobamos si es admin
+// 3) Comprobamos si es admin
 if ($_SESSION['usuario_rol'] !== 'admin') {
     echo "Acceso denegado. Esta sección es solo para administradores.";
     exit();
 }
+
+// 4) Ahora sí podemos usar $conn para cargar géneros
+$gStmt   = $conn->query("SELECT id, nombre FROM generos ORDER BY nombre");
+$generos = $gStmt->fetchAll(PDO::FETCH_ASSOC);
 
 include '../includes/header.php';
 include '../includes/nav.php';
@@ -46,8 +53,18 @@ include '../includes/nav.php';
             <label for="anho">Año</label>
             <input type="text" name="anho" required>
 
-            <label for="genero">Género</label>
-            <input type="text" name="genero" required>
+            <label>Géneros</label>
+                <div class="checkbox-group">
+                    <?php foreach($generos as $g): ?>
+                        <label>
+                            <input 
+                                type="checkbox" 
+                                name="genero_ids[]" 
+                                value="<?= $g['id'] ?>"
+                            > <?= htmlspecialchars($g['nombre']) ?>
+                            </label><br>
+                    <?php endforeach; ?>
+                </div>
 
             <label for="portada">Portada (JPG, PNG)</label>
             <input type="file" name="portada" accept="image/*" required>

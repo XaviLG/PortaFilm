@@ -2,16 +2,16 @@
 session_start();
 include '../config/db.php';
 
-// 1) Recoger el id de la URL y validarlo
+// 1) Recoger y validar ID de película
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($id <= 0) {
     header('Location: ../index.php');
-    exit();
+    exit;
 }
 
-// 2) Consulta a la base de datos
+// 2) Obtener datos básicos de la película
 $stmt = $conn->prepare("
-    SELECT titulo, portada, sipnopsis, anho, genero, duracion, director, pais
+    SELECT titulo, portada, sipnopsis, anho, duracion, director, pais
     FROM peliculas
     WHERE id = ?
 ");
@@ -19,28 +19,39 @@ $stmt->execute([$id]);
 $pelicula = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$pelicula) {
     echo "Película no encontrada.";
-    exit();
+    exit;
 }
 
-// 3) Obtener valoración media
+// 3) Obtener géneros asociados (tabla pivot)
+$gStmt = $conn->prepare("
+    SELECT g.nombre
+    FROM generos g
+    JOIN pelicula_genero pg 
+      ON g.id = pg.genero_id
+    WHERE pg.pelicula_id = ?
+    ORDER BY g.nombre
+");
+$gStmt->execute([$id]);
+$listaGeneros = $gStmt->fetchAll(PDO::FETCH_COLUMN);
+
+// 4) Obtener valoración media
 $avgStmt = $conn->prepare("
-  SELECT ROUND(AVG(puntuacion),1) 
-    AS avg_rating 
-  FROM valoracion 
-  WHERE pelicula_id = ?
+    SELECT ROUND(AVG(puntuacion),1) AS avg_rating
+    FROM valoracion
+    WHERE pelicula_id = ?
 ");
 $avgStmt->execute([$id]);
 $avg = $avgStmt->fetchColumn();
 
-// 4) Obtener tu puntuación si estás logueado
+// 5) Obtener tu puntuación si estás logueado
 $userScore = 0;
 if (isset($_SESSION['usuario_id'])) {
     $usrStmt = $conn->prepare("
-      SELECT puntuacion 
-      FROM valoracion 
-      WHERE user_id = ? AND pelicula_id = ?
+        SELECT puntuacion
+        FROM valoracion
+        WHERE user_id = ? AND pelicula_id = ?
     ");
-    $usrStmt->execute([$_SESSION['usuario_id'], $id]);
+    $usrStmt->execute([ $_SESSION['usuario_id'], $id ]);
     $userScore = (int)$usrStmt->fetchColumn();
 }
 
@@ -51,11 +62,11 @@ include '../includes/nav.php';
 <div class="page-content">
   <div class="detail-container">
 
-    <!--  LEFT COLUMN: poster arriba y estrellas debajo -->
+    <!-- LEFT COLUMN: póster + estrellas + media -->
     <div class="detail-left">
       <div class="detail-poster">
         <img 
-          src="/portaFilm/assets/img/<?php echo htmlspecialchars($pelicula['portada']); ?>" 
+          src="/portaFilm/assets/img/<?php echo htmlspecialchars($pelicula['portada']); ?>"
           alt="<?php echo htmlspecialchars($pelicula['titulo']); ?>"
         >
       </div>
@@ -65,24 +76,46 @@ include '../includes/nav.php';
           <span class="star" data-score="<?php echo $i; ?>">★</span>
         <?php endfor; ?>
       </div>
+
       <div class="avg-rating">
-      <?php 
-        echo $avg 
-          ? "Valoración media: $avg / 10" 
-          : "Sin valoraciones aún"; 
-      ?>
-    </div>
+        <?php
+          if ($avg) {
+            echo "Valoración media: {$avg} / 10";
+          } else {
+            echo "Sin valoraciones aún";
+          }
+        ?>
+      </div>
     </div>
 
-    <!--  RIGHT COLUMN: toda la información -->
+    <!-- RIGHT COLUMN: información -->
     <div class="detail-info">
       <h1><?php echo htmlspecialchars($pelicula['titulo']); ?></h1>
-      <div class="info-item"><strong>Año:</strong> <?php echo htmlspecialchars($pelicula['anho']); ?></div>
-      <div class="info-item"><strong>Duración:</strong> <?php echo htmlspecialchars($pelicula['duracion']); ?></div>
-      <div class="info-item"><strong>País:</strong> <?php echo htmlspecialchars($pelicula['pais']); ?></div>
-      <div class="info-item"><strong>Género:</strong> <?php echo htmlspecialchars($pelicula['genero']); ?></div>
-      <div class="info-item"><strong>Director:</strong> <?php echo htmlspecialchars($pelicula['director']); ?></div>
-      <div class="info-item"><strong>Sinopsis:</strong>
+
+      <div class="info-item">
+        <strong>Año:</strong> <?php echo htmlspecialchars($pelicula['anho']); ?>
+      </div>
+      <div class="info-item">
+        <strong>Duración:</strong> <?php echo htmlspecialchars($pelicula['duracion']); ?>
+      </div>
+      <div class="info-item">
+        <strong>País:</strong> <?php echo htmlspecialchars($pelicula['pais']); ?>
+      </div>
+      <div class="info-item">
+        <strong>Géneros:</strong>
+        <?php
+          if ($listaGeneros) {
+            echo htmlspecialchars(implode(', ', $listaGeneros));
+          } else {
+            echo '—';
+          }
+        ?>
+      </div>
+      <div class="info-item">
+        <strong>Director:</strong> <?php echo htmlspecialchars($pelicula['director']); ?>
+      </div>
+      <div class="info-item">
+        <strong>Sinopsis:</strong>
         <p><?php echo nl2br(htmlspecialchars($pelicula['sipnopsis'])); ?></p>
       </div>
     </div>
@@ -90,12 +123,11 @@ include '../includes/nav.php';
   </div>
 </div>
 
-<!-- Indicador de sesión para rating.js -->
+<!-- Pasamos la sesión y score a rating.js -->
 <script>
-  window.isLogged = <?php echo isset($_SESSION['usuario_id']) ? 'true' : 'false'; ?>;
-  window.userScore  = <?php echo json_encode($userScore); ?>;
+  window.isLogged  = <?php echo isset($_SESSION['usuario_id']) ? 'true' : 'false'; ?>;
+  window.userScore = <?php echo json_encode($userScore); ?>;
 </script>
-<!-- Lógica de hover/click en las estrellas -->
 <script src="/portaFilm/assets/js/rating.js"></script>
 
 <?php include '../includes/footer.php'; ?>

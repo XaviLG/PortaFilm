@@ -1,4 +1,5 @@
 <?php
+// pages/peliculas.php
 session_start();
 include '../config/db.php';
 
@@ -33,6 +34,7 @@ $gStmt = $conn->prepare("
 ");
 $gStmt->execute([$id]);
 $listaGeneros = $gStmt->fetchAll(PDO::FETCH_COLUMN);
+// $listaGeneros ahora es un array de nombres de géneros, p.ej. ['Acción','Comedia']
 
 // 4) Obtener valoración media
 $avgStmt = $conn->prepare("
@@ -41,7 +43,8 @@ $avgStmt = $conn->prepare("
     WHERE pelicula_id = ?
 ");
 $avgStmt->execute([$id]);
-$avg = $avgStmt->fetchColumn();
+$avg = $avgStmt->fetchColumn(); 
+// $avg contendrá, por ejemplo, 7.8 o NULL si no hay valoraciones
 
 // 5) Obtener tu puntuación si estás logueado
 $userScore = 0;
@@ -53,11 +56,34 @@ if (isset($_SESSION['usuario_id'])) {
     ");
     $usrStmt->execute([ $_SESSION['usuario_id'], $id ]);
     $userScore = (int)$usrStmt->fetchColumn();
+    // Si el usuario ya ha votado, $userScore es de 1 a 10; si no, se queda en 0
 }
 
 include '../includes/header.php';
 include '../includes/nav.php';
 ?>
+
+<?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
+  <div style="text-align: right; margin-bottom: 10px;">
+    <a 
+      href="/portaFilm/pages/admin_edit.php?id=<?php echo $id; ?>" 
+      class="btn btn-edit"
+      style="
+        display: inline-block;
+        background-color: #FFD700; /* dorado */
+        color: #000;
+        padding: 8px 12px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 0.9em;
+      "
+    >
+      ✎ Editar película
+    </a>
+  </div>
+<?php endif; ?>
+
 
 <div class="page-content">
   <div class="detail-container">
@@ -71,15 +97,18 @@ include '../includes/nav.php';
         >
       </div>
 
+      <!-- 5) Estrellas para votar -->
       <div class="star-rating" data-pelicula="<?php echo $id; ?>">
         <?php for ($i = 1; $i <= 10; $i++): ?>
           <span class="star" data-score="<?php echo $i; ?>">★</span>
         <?php endfor; ?>
       </div>
 
+      <!-- 4) Mostrar la valoración media -->
       <div class="avg-rating">
         <?php
           if ($avg) {
+            // Si existe un promedio, lo mostramos con una decimal
             echo "Valoración media: {$avg} / 10";
           } else {
             echo "Sin valoraciones aún";
@@ -88,7 +117,7 @@ include '../includes/nav.php';
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: información -->
+    <!-- RIGHT COLUMN: toda la información de la película -->
     <div class="detail-info">
       <h1><?php echo htmlspecialchars($pelicula['titulo']); ?></h1>
 
@@ -101,16 +130,20 @@ include '../includes/nav.php';
       <div class="info-item">
         <strong>País:</strong> <?php echo htmlspecialchars($pelicula['pais']); ?>
       </div>
+
+      <!-- 3) Mostrar los géneros concatenados -->
       <div class="info-item">
         <strong>Géneros:</strong>
         <?php
-          if ($listaGeneros) {
+          if (count($listaGeneros) > 0) {
+            // Unimos con coma y espacio, p.ej. "Acción, Comedia, Terror"
             echo htmlspecialchars(implode(', ', $listaGeneros));
           } else {
             echo '—';
           }
         ?>
       </div>
+
       <div class="info-item">
         <strong>Director:</strong> <?php echo htmlspecialchars($pelicula['director']); ?>
       </div>
@@ -123,9 +156,11 @@ include '../includes/nav.php';
   </div>
 </div>
 
-<!-- Pasamos la sesión y score a rating.js -->
+<!-- 5) Pasamos variables a rating.js -->
 <script>
+  // ¿Está el usuario logueado? rating.js las usará para redirigir a login si hace click sin estarlo
   window.isLogged  = <?php echo isset($_SESSION['usuario_id']) ? 'true' : 'false'; ?>;
+  // Si ya había votado, userScore es su puntuación; si no, 0
   window.userScore = <?php echo json_encode($userScore); ?>;
 </script>
 <script src="/portaFilm/assets/js/rating.js"></script>

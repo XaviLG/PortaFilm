@@ -461,3 +461,112 @@ body {
   color: #555;
 }
 /******************PELICULAS-PHP****************************************/
+
+
+/******************COMENTARIOS-PELICULAS****************************************/
+.comments-section {
+  margin-top: 40px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.comments-section h2 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.5em;
+  border-left: 4px solid #FFD700; /* pequeño indicador dorado */
+  padding-left: 10px;
+}
+
+.no-comments {
+  color: #666;
+  font-style: italic;
+}
+
+.comment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.comment-item {
+  border-bottom: 1px solid #eee;
+  padding: 15px 0;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-meta {
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.comment-meta strong {
+  color: #222;
+}
+
+.comment-date {
+  margin-left: 10px;
+  color: #999;
+}
+
+.comment-text {
+  font-size: 1em;
+  color: #333;
+}
+
+.comment-form {
+  margin-top: 30px;
+}
+
+.comment-form h3 {
+  margin-bottom: 10px;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.comment-form textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 1em;
+}
+
+.comment-form .btn-submit {
+  margin-top: 8px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95em;
+}
+
+.comment-form .btn-submit:hover {
+  background-color: #218838;
+}
+
+.must-login {
+  margin-top: 20px;
+  color: #555;
+}
+
+.must-login a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.must-login a:hover {
+  text-decoration: underline;
+}
+/******************COMENTARIOS-PELICULAS****************************************/

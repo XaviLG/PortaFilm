@@ -154,6 +154,75 @@ include '../includes/nav.php';
     </div>
 
   </div>
+  <div class="comments-section">
+    <h2>Comentarios</h2>
+
+    <?php
+    // 1) Consultar todos los comentarios para esta película
+    $cStmt = $conn->prepare("
+      SELECT c.texto, c.date, u.name 
+      FROM comentarios c
+      JOIN `user` u ON c.user_id = u.id
+      WHERE c.pelicula_id = ?
+      ORDER BY c.date DESC, c.id DESC
+    ");
+    $cStmt->execute([$id]);
+    $comentarios = $cStmt->fetchAll(PDO::FETCH_ASSOC);
+    ?>
+
+    <?php if (count($comentarios) === 0): ?>
+      <p class="no-comments">Aún no hay comentarios. ¡Sé el primero en comentar!</p>
+    <?php else: ?>
+      <ul class="comment-list">
+        <?php foreach ($comentarios as $com): ?>
+          <li class="comment-item">
+            <div class="comment-meta">
+              <strong><?php echo htmlspecialchars($com['name']); ?></strong>
+              <span class="comment-date">
+                <?php echo date('d/m/Y', strtotime($com['date'])); ?>
+              </span>
+            </div>
+            <div class="comment-text">
+              <?php echo nl2br(htmlspecialchars($com['texto'])); ?>
+            </div>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php endif; ?>
+        <?php if (isset($_SESSION['usuario_id'])): ?>
+      <div class="comment-form">
+        <h3>Deja tu comentario</h3>
+        <form 
+          action="/portaFilm/controllers/commentController.php" 
+          method="POST"
+        >
+          <input 
+            type="hidden" 
+            name="pelicula_id" 
+            value="<?php echo $id; ?>"
+          >
+
+          <textarea 
+            name="texto" 
+            rows="4" 
+            placeholder="Escribe tu comentario aquí..." 
+            required
+          ></textarea>
+
+          <button type="submit" class="btn btn-submit">
+            Publicar comentario
+          </button>
+        </form>
+      </div>
+    <?php else: ?>
+      <p class="must-login">
+        Debes <a href="/portaFilm/pages/login.php">iniciar sesión</a> para dejar un comentario.
+      </p>
+    <?php endif; ?>
+
+  </div><!-- /.comments-section -->
+  <!-- ==================================================== -->
+
 </div>
 
 <!-- 5) Pasamos variables a rating.js -->

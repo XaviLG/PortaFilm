@@ -1,15 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Helper que crea una tarjeta
+  // Helper que crea una tarjeta de película
   function makeCard(p) {
     const card = document.createElement("div");
     card.className = "movie-card";
     card.style.cursor = "pointer";
 
+    // --- Imagen ---
     const img = new Image();
     img.src = p.portada;
     img.alt = p.titulo;
     card.appendChild(img);
 
+    // --- Información: estrellas, título y botón ---
     const info = document.createElement("div");
     info.className = "movie-info";
     info.innerHTML = `
@@ -19,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     card.appendChild(info);
 
+    // Al hacer clic, vamos al detalle de la película
     card.addEventListener("click", () => {
       window.location.href = `/portaFilm/pages/peliculas.php?id=${p.id}`;
     });
@@ -26,34 +29,49 @@ document.addEventListener("DOMContentLoaded", () => {
     return card;
   }
 
-  // 1) Agregadas recientemente
+  // ===== 1) Cargar “Agregadas recientemente” =====
   fetch("/portaFilm/api/get_peliculas.php?limit=15")
     .then(r => r.json())
     .then(pelis => {
       console.log("Recientes:", pelis);
-      const c = document.getElementById("recent-carousel");
-      pelis.forEach(p => c.appendChild(makeCard(p)));
+      const container = document.getElementById("recent-carousel");
+      //  └─ Vaciar contenido previo
+      container.innerHTML = "";
+
+      pelis.forEach(p => {
+        container.appendChild(makeCard(p));
+      });
     })
     .catch(e => console.error(e));
 
-  // 2) Mejor valoradas
+  // ===== 2) Cargar “Mejor valoradas” =====
   fetch("/portaFilm/api/get_peliculas.php?top=15")
     .then(r => r.json())
     .then(pelis => {
       console.log("Top:", pelis);
-      const c = document.getElementById("top-rated-carousel");
-      pelis.forEach(p => c.appendChild(makeCard(p)));
+      const container = document.getElementById("top-rated-carousel");
+      //  └─ Vaciar contenido previo
+      container.innerHTML = "";
+
+      pelis.forEach(p => {
+        container.appendChild(makeCard(p));
+      });
     })
     .catch(e => console.error(e));
 
-  // 3) Por cada .carousel[data-genero]
-  document.querySelectorAll(".carousel[data-genero]").forEach(car => {
-    const gid = car.dataset.genero;
+  // ===== 3) Cargar carruseles por cada género =====
+  document.querySelectorAll(".carousel[data-genero]").forEach(carouselEl => {
+    const gid = carouselEl.dataset.genero;
     fetch(`/portaFilm/api/get_peliculas.php?genero_id=${gid}&limit=15`)
       .then(r => r.json())
       .then(pelis => {
         console.log(`Género ${gid}:`, pelis);
-        pelis.forEach(p => car.appendChild(makeCard(p)));
+        //  └─ Vaciar contenido previo
+        carouselEl.innerHTML = "";
+
+        pelis.forEach(p => {
+          carouselEl.appendChild(makeCard(p));
+        });
       })
       .catch(e => console.error(e));
   });

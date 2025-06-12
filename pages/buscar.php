@@ -11,15 +11,12 @@ $context = $_GET['context'] ?? ''; // si viene "lista", filtramos por la lista d
 $userId  = $_SESSION['usuario_id'] ?? null;
 
 if ($q === '') {
-    // Si no hay término de búsqueda, volvemos al home
     header('Location: home.php');
     exit;
 }
 
-// 2) Construimos SQL y parámetros según contexto
-$params = [];
+// 2) Construcción del SQL (solo por título)
 if ($context === 'lista' && $userId) {
-    // Búsqueda DENTRO de la lista del usuario (solo título)
     $sql = "
       SELECT p.id, p.titulo, p.portada,
              ROUND(AVG(v.puntuacion),1) AS media_puntuacion
@@ -32,10 +29,8 @@ if ($context === 'lista' && $userId) {
       ORDER BY ml.id DESC
       LIMIT 50
     ";
-    // Parámetros: primero el user_id, luego el título
     $params = [$userId, "%$q%"];
 } else {
-    // Búsqueda GLOBAL en todas las películas (solo título)
     $sql = "
       SELECT p.id, p.titulo, p.portada,
              ROUND(AVG(v.puntuacion),1) AS media_puntuacion
@@ -49,7 +44,6 @@ if ($context === 'lista' && $userId) {
     $params = ["%$q%"];
 }
 
-// 3) Ejecutamos la consulta
 $stmt = $conn->prepare($sql);
 $stmt->execute($params);
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -59,34 +53,31 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <section class="movie-section">
     <h2>
       🔎 Resultados para «<?= htmlspecialchars($q, ENT_QUOTES) ?>»
-      <?php if ($context === 'lista' && $userId): ?>
-        – en tu lista
-      <?php endif; ?>
+      <?php if ($context === 'lista' && $userId): ?> – en tu lista<?php endif; ?>
     </h2>
 
     <?php if (empty($results)): ?>
-      <p>No se encontraron películas que coincidan.</p>
+    <p>No se encontraron películas que coincidan.</p>
     <?php else: ?>
-      <div class="carousel-container">
-        <div class="carousel">
-          <?php foreach ($results as $p): ?>
-            <div class="movie-card" style="cursor:pointer;">
-              <img
-                src="/portaFilm/assets/img/<?= htmlspecialchars($p['portada'], ENT_QUOTES) ?>"
-                alt="<?= htmlspecialchars($p['titulo'], ENT_QUOTES) ?>"
-              />
-              <div class="movie-info">
-                <span class="rating">⭐ <?= $p['media_puntuacion'] ?? 'N/A' ?></span>
-                <h4><?= htmlspecialchars($p['titulo'], ENT_QUOTES) ?></h4>
-                <button onclick="location.href='/portaFilm/pages/peliculas.php?id=<?= $p['id'] ?>'">
-                  Ver ficha
-                </button>
-              </div>
+        <div class="results-grid">
+            <?php foreach ($results as $p): ?>
+                <div
+                    class="movie-card"
+                    onclick="window.location='/portaFilm/pages/peliculas.php?id=<?= $p['id'] ?>';"
+                >
+                    <img
+                    src="/portaFilm/assets/img/<?= htmlspecialchars($p['portada'], ENT_QUOTES) ?>"
+                    alt="<?= htmlspecialchars($p['titulo'], ENT_QUOTES) ?>"
+                />
+                <div class="movie-info">
+                    <span class="rating">⭐ <?= $p['media_puntuacion'] ?? 'N/A' ?></span>
+                    <h4><?= htmlspecialchars($p['titulo'], ENT_QUOTES) ?></h4>
+                    <button type="button">Ver ficha</button>
+                </div>
             </div>
-          <?php endforeach; ?>
+            <?php endforeach; ?>
         </div>
-      </div>
-    <?php endif; ?>
+        <?php endif; ?>
   </section>
 </div>
 

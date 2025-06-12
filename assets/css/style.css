@@ -570,3 +570,31 @@ body {
   text-decoration: underline;
 }
 /******************COMENTARIOS-PELICULAS****************************************/
+/******************MI-LISTA ****************************************/
+/* Container de “Mi lista” */
+.my-list-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+/* Ajustes a movie-card dentro de Mi lista */
+.my-list-container .movie-card {
+  flex: 0 0 160px;            /* ancho fijo para cada tarjeta */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ajusta la altura de la imagen si quieres */
+.my-list-container .movie-card img {
+  height: 240px;
+  object-fit: cover;
+}
+
+/* Asegúrate de que tus botones tengan algo de separación */
+.btn-remove-lista {
+  margin-top: 8px;
+}
+/******************MI-LISTA ****************************************/

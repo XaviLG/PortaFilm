@@ -29,62 +29,67 @@ include '../includes/nav.php';
 <div class="page-content">
   <section class="movie-section">
     <h2>📋 Mi lista de películas</h2>
+
     <?php if (empty($peliculas)): ?>
       <p>Aún no has agregado ninguna película a tu lista.</p>
     <?php else: ?>
-      <div class="carousel-container">
-        <div class="carousel" id="mi-lista-carousel">
-          <?php foreach($peliculas as $p): ?>
-            <div class="movie-card" style="cursor:pointer;">
-              <!-- Imagen de portada -->
-              <img src="/portaFilm/assets/img/<?php echo htmlspecialchars($p['portada']); ?>"
-                   alt="<?php echo htmlspecialchars($p['titulo']); ?>" />
-              <!-- Info mínima -->
-              <div class="movie-info">
-                <h4><?php echo htmlspecialchars($p['titulo']); ?></h4>
-                <button class="btn-remove-lista" data-id="<?php echo $p['id']; ?>">
-                  ✕ Quitar
-                </button>
-              </div>
+      <div class="my-list-container">
+        <?php foreach($peliculas as $p): ?>
+          <div class="movie-card">
+            <!-- Imagen de portada -->
+            <img 
+              src="/portaFilm/assets/img/<?php echo htmlspecialchars($p['portada']); ?>" 
+              alt="<?php echo htmlspecialchars($p['titulo']); ?>" 
+            />
+
+            <!-- Info mínima y botón de quitar -->
+            <div class="movie-info">
+              <h4><?php echo htmlspecialchars($p['titulo']); ?></h4>
+              <button 
+                class="btn-remove-lista" 
+                data-id="<?php echo $p['id']; ?>"
+              >
+                ✕ Quitar
+              </button>
             </div>
-          <?php endforeach; ?>
-        </div>
+          </div>
+        <?php endforeach; ?>
       </div>
     <?php endif; ?>
   </section>
 </div>
 
-<!-- Script para quitar elementos directamente desde esta página -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // Para cada botón “✕ Quitar”, añadimos evento
+    // Quitar de la lista
     document.querySelectorAll(".btn-remove-lista").forEach(btn => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", async e => {
         e.stopPropagation();
         const peliculaId = btn.dataset.id;
-        fetch("/portaFilm/api/add_to_list.php?pelicula_id=" + peliculaId, {
-          method: "POST"
-        })
-        .then(res => res.json())
-        .then(data => {
+        try {
+          const res = await fetch("/portaFilm/api/add_to_list.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `pelicula_id=${peliculaId}`
+          });
+          const data = await res.json();
           if (data.success && data.action === "removed") {
-            // Eliminar la tarjeta del DOM
             btn.closest(".movie-card").remove();
           } else {
-            alert("Error al quitar de la lista");
+            alert("No se pudo quitar de la lista.");
           }
-        })
-        .catch(err => console.error(err));
+        } catch (err) {
+          console.error(err);
+        }
       });
     });
 
-    // Si clicas fuera del botón, ir al detalle de la película
+    // Click en la tarjeta → detalle
     document.querySelectorAll(".movie-card").forEach(card => {
-      card.addEventListener("click", (e) => {
-        // Si se clicó en el botón “Quitar”, no redirigimos
+      card.addEventListener("click", e => {
         if (e.target.classList.contains("btn-remove-lista")) return;
-        const pid = e.currentTarget.querySelector(".btn-remove-lista").dataset.id;
-        window.location.href = "/portaFilm/pages/peliculas.php?id=" + pid;
+        const pid = card.querySelector(".btn-remove-lista").dataset.id;
+        window.location.href = `/portaFilm/pages/peliculas.php?id=${pid}`;
       });
     });
   });

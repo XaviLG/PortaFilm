@@ -283,14 +283,26 @@ body {
     padding: 10px;
 }
 
+/* ----------------------------------------------
+   Títulos con truncado, mismo look en todos lados
+----------------------------------------------- */
 .movie-info h4 {
-    margin: 5px 0;
+    margin: 5px 0 8px;
     font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
+/* rating y botón debajo */
 .movie-info .rating {
     color: #f5c518;
     font-weight: bold;
+    display: block;
+    margin-bottom: 4px;
 }
 
 .movie-info button {
@@ -309,7 +321,8 @@ body {
 .movie-info button:hover {
     background-color: #0056b3;
 }
-/******************INICIO-MOVIE-SECTION*****************************************/
+/******************FIN-MOVIE-SECTION*****************************************/
+
 /******************AÑADIR-PELICULA-FORM*****************************************/
 .form-container {
     max-width: 500px;
@@ -580,21 +593,5 @@ body {
   margin-top: 20px;
 }
 
-/* Ajustes a movie-card dentro de Mi lista */
-.my-list-container .movie-card {
-  flex: 0 0 160px;            /* ancho fijo para cada tarjeta */
-  display: flex;
-  flex-direction: column;
-}
 
-/* Ajusta la altura de la imagen si quieres */
-.my-list-container .movie-card img {
-  height: 240px;
-  object-fit: cover;
-}
-
-/* Asegúrate de que tus botones tengan algo de separación */
-.btn-remove-lista {
-  margin-top: 8px;
-}
 /******************MI-LISTA ****************************************/

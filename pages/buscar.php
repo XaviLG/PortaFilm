@@ -19,7 +19,7 @@ if ($q === '') {
 // 2) Construimos SQL y parámetros según contexto
 $params = [];
 if ($context === 'lista' && $userId) {
-    // Búsqueda DENTRO de la lista del usuario
+    // Búsqueda DENTRO de la lista del usuario (solo título)
     $sql = "
       SELECT p.id, p.titulo, p.portada,
              ROUND(AVG(v.puntuacion),1) AS media_puntuacion
@@ -27,27 +27,26 @@ if ($context === 'lista' && $userId) {
       INNER JOIN mi_lista ml    ON ml.pelicula_id = p.id
       LEFT  JOIN valoracion v   ON v.pelicula_id = p.id
       WHERE ml.user_id = ?
-        AND (p.titulo LIKE ? OR p.sipnopsis LIKE ?)
+        AND p.titulo LIKE ?
       GROUP BY p.id
       ORDER BY ml.id DESC
       LIMIT 50
     ";
-    // 1er parámetro user_id, luego dos veces %q%
-    $params = [$userId, "%$q%", "%$q%"];
+    // Parámetros: primero el user_id, luego el título
+    $params = [$userId, "%$q%"];
 } else {
-    // Búsqueda GLOBAL en todas las películas
+    // Búsqueda GLOBAL en todas las películas (solo título)
     $sql = "
       SELECT p.id, p.titulo, p.portada,
              ROUND(AVG(v.puntuacion),1) AS media_puntuacion
       FROM peliculas p
       LEFT JOIN valoracion v ON v.pelicula_id = p.id
-      WHERE p.titulo   LIKE ?
-         OR p.sipnopsis LIKE ?
+      WHERE p.titulo LIKE ?
       GROUP BY p.id
       ORDER BY p.titulo ASC
       LIMIT 50
     ";
-    $params = ["%$q%", "%$q%"];
+    $params = ["%$q%"];
 }
 
 // 3) Ejecutamos la consulta

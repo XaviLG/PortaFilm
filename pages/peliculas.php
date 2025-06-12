@@ -34,7 +34,6 @@ $gStmt = $conn->prepare("
 ");
 $gStmt->execute([$id]);
 $listaGeneros = $gStmt->fetchAll(PDO::FETCH_COLUMN);
-// $listaGeneros ahora es un array de nombres de géneros, p.ej. ['Acción','Comedia']
 
 // 4) Obtener valoración media
 $avgStmt = $conn->prepare("
@@ -43,8 +42,7 @@ $avgStmt = $conn->prepare("
     WHERE pelicula_id = ?
 ");
 $avgStmt->execute([$id]);
-$avg = $avgStmt->fetchColumn(); 
-// $avg contendrá, por ejemplo, 7.8 o NULL si no hay valoraciones
+$avg = $avgStmt->fetchColumn();
 
 // 5) Obtener tu puntuación si estás logueado
 $userScore = 0;
@@ -56,31 +54,53 @@ if (isset($_SESSION['usuario_id'])) {
     ");
     $usrStmt->execute([ $_SESSION['usuario_id'], $id ]);
     $userScore = (int)$usrStmt->fetchColumn();
-    // Si el usuario ya ha votado, $userScore es de 1 a 10; si no, se queda en 0
 }
 
 include '../includes/header.php';
 include '../includes/nav.php';
 ?>
 
+<!-- ADMIN ACTIONS: Editar + Eliminar -->
 <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
-  <div style="text-align: right; margin-bottom: 10px;">
+  <div style="text-align: right; margin: 20px 0;">
     <a 
       href="/portaFilm/pages/admin_edit.php?id=<?php echo $id; ?>" 
-      class="btn btn-edit"
       style="
         display: inline-block;
-        background-color: #FFD700; /* dorado */
+        background-color: #FFD700;
         color: #000;
         padding: 8px 12px;
         border-radius: 4px;
         text-decoration: none;
         font-weight: bold;
-        font-size: 0.9em;
+        margin-right: 8px;
       "
     >
       ✎ Editar película
     </a>
+
+    <form 
+      action="/portaFilm/api/delete_pelicula.php" 
+      method="POST" 
+      style="display:inline"
+      onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta película?');"
+    >
+      <input type="hidden" name="id" value="<?php echo $id; ?>">
+      <button 
+        type="submit" 
+        style="
+          background-color: #E02424;
+          color: #fff;
+          border: none;
+          padding: 8px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: bold;
+        "
+      >
+        🗑 Eliminar película
+      </button>
+    </form>
   </div>
 <?php endif; ?>
 
@@ -97,18 +117,17 @@ include '../includes/nav.php';
         >
       </div>
 
-      <!-- 5) Estrellas para votar -->
+      <!-- Estrellas para votar -->
       <div class="star-rating" data-pelicula="<?php echo $id; ?>">
         <?php for ($i = 1; $i <= 10; $i++): ?>
           <span class="star" data-score="<?php echo $i; ?>">★</span>
         <?php endfor; ?>
       </div>
 
-      <!-- 4) Mostrar la valoración media -->
+      <!-- Mostrar la valoración media -->
       <div class="avg-rating">
         <?php
           if ($avg) {
-            // Si existe un promedio, lo mostramos con una decimal
             echo "Valoración media: {$avg} / 10";
           } else {
             echo "Sin valoraciones aún";
@@ -130,20 +149,14 @@ include '../includes/nav.php';
       <div class="info-item">
         <strong>País:</strong> <?php echo htmlspecialchars($pelicula['pais']); ?>
       </div>
-
-      <!-- 3) Mostrar los géneros concatenados -->
       <div class="info-item">
         <strong>Géneros:</strong>
         <?php
-          if (count($listaGeneros) > 0) {
-            // Unimos con coma y espacio, p.ej. "Acción, Comedia, Terror"
-            echo htmlspecialchars(implode(', ', $listaGeneros));
-          } else {
-            echo '—';
-          }
+          echo count($listaGeneros)
+            ? htmlspecialchars(implode(', ', $listaGeneros))
+            : '—';
         ?>
       </div>
-
       <div class="info-item">
         <strong>Director:</strong> <?php echo htmlspecialchars($pelicula['director']); ?>
       </div>
@@ -154,11 +167,13 @@ include '../includes/nav.php';
     </div>
 
   </div>
+
+  <!-- Sección de Comentarios -->
   <div class="comments-section">
     <h2>Comentarios</h2>
 
     <?php
-    // 1) Consultar todos los comentarios para esta película
+    // Cargar comentarios
     $cStmt = $conn->prepare("
       SELECT c.texto, c.date, u.name 
       FROM comentarios c
@@ -170,8 +185,8 @@ include '../includes/nav.php';
     $comentarios = $cStmt->fetchAll(PDO::FETCH_ASSOC);
     ?>
 
-    <?php if (count($comentarios) === 0): ?>
-      <p class="no-comments">Aún no hay comentarios. ¡Sé el primero en comentar!</p>
+    <?php if (empty($comentarios)): ?>
+      <p class="no-comments">Aún no hay comentarios.</p>
     <?php else: ?>
       <ul class="comment-list">
         <?php foreach ($comentarios as $com): ?>
@@ -189,26 +204,22 @@ include '../includes/nav.php';
         <?php endforeach; ?>
       </ul>
     <?php endif; ?>
-        <?php if (isset($_SESSION['usuario_id'])): ?>
+
+    <!-- Formulario para dejar comentario -->
+    <?php if (isset($_SESSION['usuario_id'])): ?>
       <div class="comment-form">
         <h3>Deja tu comentario</h3>
         <form 
           action="/portaFilm/controllers/commentController.php" 
           method="POST"
         >
-          <input 
-            type="hidden" 
-            name="pelicula_id" 
-            value="<?php echo $id; ?>"
-          >
-
+          <input type="hidden" name="pelicula_id" value="<?php echo $id; ?>">
           <textarea 
             name="texto" 
             rows="4" 
-            placeholder="Escribe tu comentario aquí..." 
+            placeholder="Escribe tu comentario..." 
             required
           ></textarea>
-
           <button type="submit" class="btn btn-submit">
             Publicar comentario
           </button>
@@ -216,20 +227,15 @@ include '../includes/nav.php';
       </div>
     <?php else: ?>
       <p class="must-login">
-        Debes <a href="/portaFilm/pages/login.php">iniciar sesión</a> para dejar un comentario.
+        Debes <a href="/portaFilm/pages/login.php">iniciar sesión</a> para comentar.
       </p>
     <?php endif; ?>
-
-  </div><!-- /.comments-section -->
-  <!-- ==================================================== -->
-
+  </div>
 </div>
 
-<!-- 5) Pasamos variables a rating.js -->
+<!-- Variables para rating.js -->
 <script>
-  // ¿Está el usuario logueado? rating.js las usará para redirigir a login si hace click sin estarlo
   window.isLogged  = <?php echo isset($_SESSION['usuario_id']) ? 'true' : 'false'; ?>;
-  // Si ya había votado, userScore es su puntuación; si no, 0
   window.userScore = <?php echo json_encode($userScore); ?>;
 </script>
 <script src="/portaFilm/assets/js/rating.js"></script>

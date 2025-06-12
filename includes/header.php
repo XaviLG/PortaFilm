@@ -11,7 +11,6 @@
 <header class="main-header">
     <div class="header-left">
         <a href="/portaFilm/pages/home.php" class="logo">portaFilm</a>
-        <button class="menu-btn">☰ Menú</button>
     </div>
 
     <div class="header-center">

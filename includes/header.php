@@ -31,22 +31,21 @@
         <?php endif; ?>
     </div>
 
-    <div class="header-right">
-        <a href="/portaFilm/pages/lista.php">Lista</a>
-        <?php if (isset($_SESSION['usuario_id'])): ?>
-    <a href="/portaFilm/controllers/logout.php">Cerrar sesión</a>
+     <div class="header-right">
+        <?php 
+            // Solo mostramos “Lista” a usuarios no-admin:
+            if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] !== 'admin'): 
+            ?>
+            <a href="/portaFilm/pages/lista.php">Lista</a>
+            <?php endif; ?>
 
-    <?php if ($_SESSION['usuario_rol'] === 'admin'): ?>
-        <a href="/portaFilm/pages/admin_add.php">Añadir película</a>
-    <?php endif; ?>
-    <?php else: ?>
-        <a href="/portaFilm/pages/login.php">Iniciar sesión</a>
-    <?php endif; ?>
-
-
-        <select class="lang-select">
-            <option>ES</option>
-            <option>EN</option>
-        </select>
+            <?php if (isset($_SESSION['usuario_id'])): ?>
+            <a href="/portaFilm/controllers/logout.php">Cerrar sesión</a>
+            <?php if ($_SESSION['usuario_rol'] === 'admin'): ?>
+                <a href="/portaFilm/pages/admin_add.php">Añadir película</a>
+            <?php endif; ?>
+            <?php else: ?>
+            <a href="/portaFilm/pages/login.php">Iniciar sesión</a>
+        <?php endif; ?>
     </div>
 </header>

@@ -14,8 +14,21 @@
     </div>
 
     <div class="header-center">
-        <input type="text" placeholder="Buscar en portaFilm..." class="search-input">
-        <button class="search-btn">🔍</button>
+        <?php
+        // Detectamos el nombre del script actual
+        $current = basename($_SERVER['PHP_SELF']);
+        // Solo mostramos este buscador si NO estamos en lista.php
+        if ($current !== 'lista.php'): ?>
+            <form action="/portaFilm/pages/buscar.php" method="get" class="search-form">
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Buscar en portaFilm..."
+                    value="<?= isset($_GET['q']) ? htmlspecialchars($_GET['q']) : '' ?>"
+                />
+                <button type="submit">🔍</button>
+            </form>
+        <?php endif; ?>
     </div>
 
     <div class="header-right">

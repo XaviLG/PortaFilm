@@ -11,7 +11,15 @@ if (!isset($_SESSION['usuario_id'])) {
 
 $userId = (int) $_SESSION['usuario_id'];
 
-// 2) Recuperar las películas de “Mi lista” de este usuario
+// 2) (Opcional) Si viene una búsqueda, redirigimos a buscar.php
+//    (Así mantenemos limpio este archivo y delegamos la lógica en buscar.php)
+if (isset($_GET['q'])) {
+    $q = trim($_GET['q']);
+    header("Location: /portaFilm/pages/buscar.php?context=lista&q=" . urlencode($q));
+    exit;
+}
+
+// 3) Recuperar las películas de “Mi lista” de este usuario
 $stmt = $conn->prepare("
     SELECT p.id, p.titulo, p.portada
     FROM peliculas p
@@ -28,26 +36,45 @@ include '../includes/nav.php';
 
 <div class="page-content">
   <section class="movie-section">
+
+    <!--  AÑADIMOS AQUÍ EL FORMULARIO DE BÚSQUEDA EN MI LISTA -->
+    <div class="search-in-list" style="margin-bottom: 20px;">
+      <form action="/portaFilm/pages/lista.php" method="get" class="search-form" style="display:flex; gap:8px;">
+        <input
+          type="text"
+          name="q"
+          placeholder="Buscar en mi lista..."
+          value="<?php echo htmlspecialchars($_GET['q'] ?? '') ?>"
+          style="flex:1; padding:5px; border-radius:4px; border:1px solid #ccc;"
+        />
+        <button type="submit" style="padding:5px 10px; border:none; background:#007BFF; color:#fff; border-radius:4px;">
+          🔍
+        </button>
+      </form>
+    </div>
+
     <h2>📋 Mi lista de películas</h2>
 
     <?php if (empty($peliculas)): ?>
       <p>Aún no has agregado ninguna película a tu lista.</p>
     <?php else: ?>
-      <div class="my-list-container">
+      <div class="my-list-container" style="display:flex; overflow-x:auto; gap:15px; padding:10px 0;">
         <?php foreach($peliculas as $p): ?>
-          <div class="movie-card">
+          <div class="movie-card" style="position:relative; flex:0 0 auto; width:160px; background:#1c1c1c; border-radius:10px; overflow:hidden; color:#fff;">
             <!-- Imagen de portada -->
             <img 
               src="/portaFilm/assets/img/<?php echo htmlspecialchars($p['portada']); ?>" 
               alt="<?php echo htmlspecialchars($p['titulo']); ?>" 
+              style="width:100%; height:230px; object-fit:cover;"
             />
 
             <!-- Info mínima y botón de quitar -->
-            <div class="movie-info">
-              <h4><?php echo htmlspecialchars($p['titulo']); ?></h4>
+            <div class="movie-info" style="padding:10px;">
+              <h4 style="margin:5px 0; font-size:14px;"><?php echo htmlspecialchars($p['titulo']); ?></h4>
               <button 
                 class="btn-remove-lista" 
                 data-id="<?php echo $p['id']; ?>"
+                style="margin-top:8px; width:100%; padding:5px; background:#007BFF; color:#fff; border:none; border-radius:8px; cursor:pointer;"
               >
                 ✕ Quitar
               </button>
@@ -61,7 +88,7 @@ include '../includes/nav.php';
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // Quitar de la lista
+    // 1) Quitar de la lista
     document.querySelectorAll(".btn-remove-lista").forEach(btn => {
       btn.addEventListener("click", async e => {
         e.stopPropagation();
@@ -84,7 +111,7 @@ include '../includes/nav.php';
       });
     });
 
-    // Click en la tarjeta → detalle
+    // 2) Click en la tarjeta → ir a detalle
     document.querySelectorAll(".movie-card").forEach(card => {
       card.addEventListener("click", e => {
         if (e.target.classList.contains("btn-remove-lista")) return;

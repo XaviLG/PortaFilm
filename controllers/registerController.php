@@ -9,7 +9,6 @@ $password = trim($_POST['password'] ?? '');
 $rol      = 2; // usuario
 
 if (!$name || !$email || !$password) {
-    // Si falta algún campo, volvemos al formulario de registro con mensaje
     $qs = http_build_query(['error' => 'Todos los campos son obligatorios.']);
     header("Location: ../pages/register.php?$qs");
     exit;
@@ -20,8 +19,8 @@ $password_hash = password_hash($password, PASSWORD_DEFAULT);
 $stmt = $conn->prepare("INSERT INTO user (name, email, password, rol) VALUES (?, ?, ?, ?)");
 try {
     $stmt->execute([$name, $email, $password_hash, $rol]);
-    // Al insertar correctamente, redirigimos directamente al login.php
-    header('Location: ../pages/login.php?registered=1');
+    // Redirect con flag de éxito
+    header('Location: ../pages/register.php?success=1');
     exit;
 } catch (PDOException $e) {
     if ($e->getCode() == 23000) {
@@ -30,11 +29,12 @@ try {
         header("Location: ../pages/register.php?$qs");
         exit;
     } else {
-        // otro error
         $qs = http_build_query(['error' => 'Error interno. Inténtalo más tarde.']);
         header("Location: ../pages/register.php?$qs");
         exit;
     }
 }
+
+
 
 

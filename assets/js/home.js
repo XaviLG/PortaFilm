@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   let myListSet = new Set();
 
-  // 0) Primero cargamos la lista del usuario
+  //Primero cargamos la lista del usuario
   fetch("/portaFilm/api/get_my_list.php")
     .then(res => res.json())
     .then(ids => {
@@ -10,33 +10,33 @@ document.addEventListener("DOMContentLoaded", () => {
     })
     .catch(err => {
       console.error("Error cargando mi lista:", err);
-      initCarousels(); // aun así seguimos
+      initCarousels();
     });
 
   function initCarousels() {
-    // Helper que crea una tarjeta
+    //Helper que crea una tarjeta
     function makeCard(p) {
       const card = document.createElement("div");
       card.className = "movie-card";
       card.style.cursor = "pointer";
 
-      // **1) Imagen**
+      // Imagen
       const img = new Image();
       img.src = p.portada;
       img.alt = p.titulo;
       card.appendChild(img);
 
-      // **2) Info + botón**
+      //Info + boton
       const info = document.createElement("div");
       info.className = "movie-info";
 
-      // Rating & título
+      //Rating y titulo
       info.innerHTML = `
         <span class="rating">⭐ ${p.media_puntuacion ?? 'N/A'}</span>
         <h4>${p.titulo}</h4>
       `;
 
-      // botón “Mi lista”
+      //Boton Mi Lista
       const btn = document.createElement("button");
       btn.className = "btn-mi-lista";
       btn.style.marginTop = "8px";
@@ -51,13 +51,13 @@ document.addEventListener("DOMContentLoaded", () => {
       info.appendChild(btn);
       card.appendChild(info);
 
-      // click tarjeta → detalle (salta si pulsan el botón)
+      //clic tarjeta
       card.addEventListener("click", ev => {
         if (ev.target === btn) return;
         window.location.href = `/portaFilm/pages/peliculas.php?id=${p.id}`;
       });
 
-      // click botón → toggle
+      //clic boton
       btn.addEventListener("click", ev => {
         ev.stopPropagation();
         toggleMyList(p.id, btn);
@@ -66,7 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return card;
     }
 
-    // Lógica de toggle (igual que ya tienes, pero ahora actualizamos myListSet)
     function toggleMyList(peliculaId, buttonEl) {
       fetch(`/portaFilm/api/add_to_list.php`, {
         method: "POST",
@@ -87,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
           buttonEl.textContent = "✓ En lista";
           buttonEl.disabled = true;
           myListSet.add(peliculaId);
-        } else /* removed */ {
+        } else {
           buttonEl.textContent = "+ Mi lista";
           buttonEl.disabled = false;
           myListSet.delete(peliculaId);
@@ -96,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .catch(err => console.error("add_to_list error:", err));
     }
 
-    // 1) Agregadas recientemente
+    //Agregadas recientemente
     fetch("/portaFilm/api/get_peliculas.php?limit=15")
       .then(r => r.json())
       .then(pelis => {
@@ -105,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .catch(console.error);
 
-    // 2) Mejor valoradas
+    //Mejor valoradas
     fetch("/portaFilm/api/get_peliculas.php?top=15")
       .then(r => r.json())
       .then(pelis => {
@@ -114,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .catch(console.error);
 
-    // 3) Por género
+    // Por genero
     document.querySelectorAll(".carousel[data-genero]").forEach(car => {
       const gid = car.dataset.genero;
       fetch(`/portaFilm/api/get_peliculas.php?genero_id=${gid}&limit=15`)

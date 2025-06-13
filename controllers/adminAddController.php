@@ -2,7 +2,7 @@
 session_start();
 include '../config/db.php';
 
-// 1) Sólo admin y sólo POST
+//Solo admin y solo POST
 if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] !== 'admin') {
     header('HTTP/1.1 403 Forbidden');
     exit;
@@ -12,16 +12,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// 2) Recoger y sanitizar campos
+//Recoger y sanitizar campos
 $titulo      = trim($_POST['titulo']    ?? '');
 $sipnopsis   = trim($_POST['sipnopsis'] ?? '');
 $anho        = trim($_POST['anho']      ?? '');
 $duracion    = trim($_POST['duracion']  ?? '');
 $director    = trim($_POST['director']  ?? '');
 $pais        = trim($_POST['pais']      ?? '');
-$genero_ids  = $_POST['genero_ids'] ?? [];  // array de IDs
+$genero_ids  = $_POST['genero_ids'] ?? [];
 
-// 3) Validaciones
+//Validaciones
 $errores = [];
 if ($titulo === '')      $errores[] = "El campo Título es obligatorio.";
 if ($sipnopsis === '')   $errores[] = "El campo Sinopsis es obligatorio.";
@@ -40,7 +40,7 @@ if (count($errores) > 0) {
     exit;
 }
 
-// 4) Subir la imagen
+//Subir la imagen
 $ext      = pathinfo($_FILES['portada']['name'], PATHINFO_EXTENSION);
 $filename = uniqid('img_') . '.' . $ext;
 $destino  = __DIR__ . '/../assets/img/' . $filename;
@@ -51,9 +51,9 @@ if (!move_uploaded_file($_FILES['portada']['tmp_name'], $destino)) {
     exit;
 }
 
-// 5) Insertar película y géneros
+//Insertar pelicula y generos
 try {
-    // 5.1 Insertamos la peli
+    //Insertamos la peli
     $sql = "INSERT INTO peliculas
       (titulo, portada, sipnopsis, anho, duracion, director, pais)
      VALUES
@@ -70,7 +70,7 @@ try {
     ]);
     $newPeliId = $conn->lastInsertId();
 
-    // 5.2 Insertamos los géneros en la tabla pivot
+    //Insertamos los generos en la tabla pivot
     $insertPG = $conn->prepare("
       INSERT INTO pelicula_genero (pelicula_id, genero_id)
       VALUES (:peli, :gen)

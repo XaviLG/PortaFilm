@@ -1,5 +1,4 @@
 <?php 
-// pages/login.php
 session_start();
 include '../includes/header.php';
 include '../includes/nav.php';

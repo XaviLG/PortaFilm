@@ -1,16 +1,15 @@
 <?php
-// pages/peliculas.php
 session_start();
 include '../config/db.php';
 
-// 1) Recoger y validar ID de película
+//Recoger y validar ID de pelicula
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($id <= 0) {
     header('Location: ../index.php');
     exit;
 }
 
-// 2) Obtener datos básicos de la película
+//Obtener datos basicos de la pelicula
 $stmt = $conn->prepare("
     SELECT titulo, portada, sipnopsis, anho, duracion, director, pais
     FROM peliculas
@@ -23,7 +22,7 @@ if (!$pelicula) {
     exit;
 }
 
-// 3) Obtener géneros asociados (tabla pivot)
+//Obtener generos asociados
 $gStmt = $conn->prepare("
     SELECT g.nombre
     FROM generos g
@@ -35,7 +34,7 @@ $gStmt = $conn->prepare("
 $gStmt->execute([$id]);
 $listaGeneros = $gStmt->fetchAll(PDO::FETCH_COLUMN);
 
-// 4) Obtener valoración media
+//Obtener valoracion media
 $avgStmt = $conn->prepare("
     SELECT ROUND(AVG(puntuacion),1) AS avg_rating
     FROM valoracion
@@ -44,7 +43,7 @@ $avgStmt = $conn->prepare("
 $avgStmt->execute([$id]);
 $avg = $avgStmt->fetchColumn();
 
-// 5) Obtener tu puntuación si estás logueado
+//Obtener tu puntuacion si estas logueado
 $userScore = 0;
 if (isset($_SESSION['usuario_id'])) {
     $usrStmt = $conn->prepare("
@@ -60,7 +59,6 @@ include '../includes/header.php';
 include '../includes/nav.php';
 ?>
 
-<!-- ADMIN ACTIONS: Editar + Eliminar -->
 <?php if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] === 'admin'): ?>
   <div style="text-align: right; margin: 20px 0;">
     <a 
@@ -107,8 +105,6 @@ include '../includes/nav.php';
 
 <div class="page-content">
   <div class="detail-container">
-
-    <!-- LEFT COLUMN: póster + estrellas + media -->
     <div class="detail-left">
       <div class="detail-poster">
         <img 
@@ -116,15 +112,11 @@ include '../includes/nav.php';
           alt="<?php echo htmlspecialchars($pelicula['titulo']); ?>"
         >
       </div>
-
-      <!-- Estrellas para votar -->
       <div class="star-rating" data-pelicula="<?php echo $id; ?>">
         <?php for ($i = 1; $i <= 10; $i++): ?>
           <span class="star" data-score="<?php echo $i; ?>">★</span>
         <?php endfor; ?>
       </div>
-
-      <!-- Mostrar la valoración media -->
       <div class="avg-rating">
         <?php
           if ($avg) {
@@ -135,8 +127,6 @@ include '../includes/nav.php';
         ?>
       </div>
     </div>
-
-    <!-- RIGHT COLUMN: toda la información de la película -->
     <div class="detail-info">
       <h1><?php echo htmlspecialchars($pelicula['titulo']); ?></h1>
 
@@ -173,7 +163,7 @@ include '../includes/nav.php';
     <h2>Comentarios</h2>
 
     <?php
-    // Cargar comentarios
+    //Cargar comentarios
     $cStmt = $conn->prepare("
       SELECT c.texto, c.date, u.name 
       FROM comentarios c
@@ -233,7 +223,6 @@ include '../includes/nav.php';
   </div>
 </div>
 
-<!-- Variables para rating.js -->
 <script>
   window.isLogged  = <?php echo isset($_SESSION['usuario_id']) ? 'true' : 'false'; ?>;
   window.userScore = <?php echo json_encode($userScore); ?>;

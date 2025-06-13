@@ -1,10 +1,8 @@
 <?php 
-// pages/register.php
 session_start();
 include '../includes/header.php';
 include '../includes/nav.php';
 
-// Capturamos parámetros de mensaje
 $error   = $_GET['error']   ?? '';
 $success = isset($_GET['success']);
 ?>

@@ -1,22 +1,19 @@
 <?php
-// pages/admin_edit.php
 session_start();
 include '../config/db.php';
 
-// 1) Solo POST/GET admin
 if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] !== 'admin') {
     header('HTTP/1.1 403 Forbidden');
     exit;
 }
 
-// 2) Verificar que tenemos un ID válido por GET
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($id <= 0) {
     header('Location: ../index.php');
     exit;
 }
 
-// 3) Obtener datos de la película
+//Obtener datos de la película
 $stmt = $conn->prepare("
     SELECT titulo, portada, sipnopsis, anho, duracion, director, pais
     FROM peliculas
@@ -29,7 +26,7 @@ if (!$pelicula) {
     exit;
 }
 
-// 4) Obtener géneros ya asignados a esta película (pivot)
+//Obtener generos ya asignados a esta pelicula
 $pgStmt = $conn->prepare("
     SELECT genero_id
     FROM pelicula_genero
@@ -37,13 +34,12 @@ $pgStmt = $conn->prepare("
 ");
 $pgStmt->execute([$id]);
 $genAsignados = $pgStmt->fetchAll(PDO::FETCH_COLUMN); 
-// $genAsignados es un array de IDs (por ejemplo [1,4,7])
 
-// 5) Cargar TODAS las filas de generos para checkboxes
+//Cargar todas las filas de generos para checkboxes
 $gStmt   = $conn->query("SELECT id, nombre FROM generos ORDER BY nombre");
 $generos = $gStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 6) Ahora mostramos el formulario pre‐relleno
+//Ahora mostramos el formulario pre‐relleno
 include '../includes/header.php';
 include '../includes/nav.php';
 ?>
@@ -63,7 +59,6 @@ include '../includes/nav.php';
       method="POST" 
       enctype="multipart/form-data"
     >
-      <!-- Campo oculto con el ID de la película -->
       <input type="hidden" name="pelicula_id" value="<?php echo $id; ?>">
 
       <label for="titulo">Título</label>
@@ -119,7 +114,7 @@ include '../includes/nav.php';
         required
       >
 
-      <!-- Checkbox múltiple de géneros -->
+      <!-- Checkbox generos -->
       <label>Géneros</label>
       <div class="checkbox-group">
         <?php foreach($generos as $g): ?>
@@ -129,7 +124,6 @@ include '../includes/nav.php';
               name="genero_ids[]"
               value="<?php echo $g['id']; ?>"
               <?php 
-                // Si ya está asignado, marcamos “checked”
                 if (in_array($g['id'], $genAsignados, true)) {
                   echo 'checked';
                 }

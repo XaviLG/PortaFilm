@@ -15,9 +15,9 @@
 
     <div class="header-center">
         <?php
-        // Detectamos el nombre del script actual
+        //Detectamos el nombre del script actual
         $current = basename($_SERVER['PHP_SELF']);
-        // Solo mostramos este buscador si NO estamos en lista.php
+        //Solo mostramos este buscador si NO estamos en lista.php
         if ($current !== 'lista.php'): ?>
             <form action="/portaFilm/pages/buscar.php" method="get" class="search-form">
                 <input
@@ -33,7 +33,7 @@
 
      <div class="header-right">
         <?php 
-            // Solo mostramos “Lista” a usuarios no-admin:
+            //Solo mostramos Lista a usuarios no-admin:
             if (isset($_SESSION['usuario_rol']) && $_SESSION['usuario_rol'] !== 'admin'): 
             ?>
             <a href="/portaFilm/pages/lista.php">Lista</a>

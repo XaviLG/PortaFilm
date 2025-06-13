@@ -2,7 +2,7 @@
 session_start();
 include '../config/db.php';
 
-// 1) Carga todos los géneros
+//Carga todos los generos
 $gStmt   = $conn->query("SELECT id,nombre FROM generos ORDER BY nombre");
 $generos = $gStmt->fetchAll(PDO::FETCH_ASSOC);
 

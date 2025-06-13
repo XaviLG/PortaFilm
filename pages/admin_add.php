@@ -1,22 +1,21 @@
 <?php
 session_start();
 
-// 1) Conexión a la base de datos
-include '../config/db.php';   // <-- Asegúrate de que esta ruta es correcta
+//Conexion a la base de datos
+include '../config/db.php';
 
-// 2) Comprobamos si está logueado
+//Comprobamos si esta logueado
 if (!isset($_SESSION['usuario_id'])) {
     header('Location: login.php');
     exit();
 }
 
-// 3) Comprobamos si es admin
+//Comprobamos si es admin
 if ($_SESSION['usuario_rol'] !== 'admin') {
     echo "Acceso denegado. Esta sección es solo para administradores.";
     exit();
 }
 
-// 4) Ahora sí podemos usar $conn para cargar géneros
 $gStmt   = $conn->query("SELECT id, nombre FROM generos ORDER BY nombre");
 $generos = $gStmt->fetchAll(PDO::FETCH_ASSOC);
 

@@ -1,13 +1,12 @@
 <?php
-// /pages/buscar.php
 session_start();
 include '../config/db.php';
 include '../includes/header.php';
 include '../includes/nav.php';
 
-// 1) Recogemos y saneamos la query
+//Recogemos y saneamos la query
 $q       = trim($_GET['q'] ?? '');
-$context = $_GET['context'] ?? ''; // si viene "lista", filtramos por la lista del usuario
+$context = $_GET['context'] ?? '';
 $userId  = $_SESSION['usuario_id'] ?? null;
 
 if ($q === '') {
@@ -15,7 +14,7 @@ if ($q === '') {
     exit;
 }
 
-// 2) Construcción del SQL (solo por título)
+//Consulta
 if ($context === 'lista' && $userId) {
     $sql = "
       SELECT p.id, p.titulo, p.portada,

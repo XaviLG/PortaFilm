@@ -1,10 +1,9 @@
 <?php
-// /PortaFilm/api/add_to_list.php
 header('Content-Type: application/json');
 session_start();
 include '../config/db.php';
 
-// 1) Debe estar logueado
+//Debe estar logueado
 if (!isset($_SESSION['usuario_id'])) {
     echo json_encode([ 'success' => false, 'error' => 'Unauthorized' ]);
     http_response_code(401);
@@ -13,7 +12,7 @@ if (!isset($_SESSION['usuario_id'])) {
 
 $userId = (int) $_SESSION['usuario_id'];
 
-// 2) Recoger ID de la película (por POST o GET)
+//Recoger ID de la pelicula
 $peliculaId = 0;
 if (isset($_POST['pelicula_id'])) {
     $peliculaId = (int) $_POST['pelicula_id'];
@@ -26,9 +25,9 @@ if ($peliculaId <= 0) {
     exit;
 }
 
-// 3) Comprobar si ya existe en la lista
+//Comprobar si ya existe en la lista
 try {
-    // 3a) Buscar si ya existe
+    //Buscar si ya existe
     $check = $conn->prepare("
         SELECT id 
         FROM mi_lista 
@@ -38,7 +37,7 @@ try {
     $exists = $check->fetchColumn();
 
     if ($exists) {
-        // 3b) Ya existe → eliminar
+        //Si ya existe eliminar
         $del = $conn->prepare("
             DELETE FROM mi_lista 
             WHERE user_id = ? AND pelicula_id = ?
@@ -50,7 +49,7 @@ try {
         ]);
         exit;
     } else {
-        // 3c) No existe → insertar
+        // Si no existe insertar
         $ins = $conn->prepare("
             INSERT INTO mi_lista (user_id, pelicula_id)
             VALUES (?, ?)

@@ -23,7 +23,6 @@ if ($pid < 1 || $score < 1 || $score > 10) {
 }
 
 try {
-    // insert o update
     $exists = $conn->prepare("
       SELECT 1 FROM valoracion 
       WHERE user_id=? AND pelicula_id=?

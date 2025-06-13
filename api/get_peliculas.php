@@ -1,5 +1,5 @@
 <?php
-// 0) Asegurarnos de NO imprimir nada antes del JSON
+// Asegurarnos de NO imprimir nada antes del JSON
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
@@ -7,12 +7,12 @@ header('Content-Type: application/json');
 include '../config/db.php';
 
 try {
-    // 1) Leer y sanear parámetros
+    //Leer y sanear parametros
     $limit     = isset($_GET['limit'])     ? (int) $_GET['limit']     : 15;
     $top       = isset($_GET['top'])       ? (bool)$_GET['top']       : false;
     $genero_id = isset($_GET['genero_id']) ? (int) $_GET['genero_id'] : null;
 
-    // 2) Preparar WHERE dinámico
+    //Preparar WHERE dinamico
     $whereClauses = [];
     $params       = [];
 
@@ -24,13 +24,10 @@ try {
         ? 'WHERE ' . implode(' AND ', $whereClauses)
         : '';
 
-    // 3) Elegir ORDER BY
     $orderBy = $top
         ? "ORDER BY media_puntuacion DESC"
         : "ORDER BY p.id DESC";
 
-    // 4) Montar la consulta con el LIMIT inyectado
-    //    (no usamos placeholder para LIMIT)
     $sql = "
       SELECT
         p.id,
@@ -48,21 +45,19 @@ try {
       LIMIT {$limit}
     ";
 
-    // 5) Ejecutar
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $pelis = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 6) Ajustar rutas de portada
+    //Ajustar rutas de portada
     foreach ($pelis as &$p) {
       $p['portada'] = '/portaFilm/assets/img/' . $p['portada'];
     }
 
-    // 7) Devolver JSON limpio
+    //Devolver JSON limpio
     echo json_encode($pelis);
 
 } catch (PDOException $e) {
-    // En caso de error, devolvemos un JSON de error
     http_response_code(500);
     echo json_encode([
       'error' => 'Error en la consulta: ' . $e->getMessage()
